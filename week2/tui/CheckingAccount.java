@@ -1,3 +1,4 @@
+package tui;
 import java.text.NumberFormat;
 
 public class CheckingAccount {

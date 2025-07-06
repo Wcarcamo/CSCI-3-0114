@@ -12,7 +12,7 @@ I avoided build tools like **Maven** & **Gradle** because I wanted to keep thing
 * Editor: VScode
 * Packages:
     - jdk-openjdk
-    - java-openjfk^AUR^
+    - java-openjfk - AUR
 
 1. Create a `.vscode` directory in the root of your JavaFX application
 2. Add `launch.json` file under `.vscode/` with the following content:
@@ -33,7 +33,7 @@ I avoided build tools like **Maven** & **Gradle** because I wanted to keep thing
 }
 ```
 
-3. Add `settings.json`
+3. Add `settings.json` under `.vscode/` with the following content:
     - 🗒️ NOTE: Update path `/usr/lib/jvm/java-24.0.1-openjfx/lib/*.jar` with your JavaFK package installation
 
 ```

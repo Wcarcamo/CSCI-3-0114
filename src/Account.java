@@ -1,12 +1,15 @@
+package src;
 public class Account {
     /* MEMBERS */
     protected String name; // The person who owns the account
     protected double balance;// do not define this in CheckingAccount class
+    protected CheckingAccount checking;
     
     /* CONSTRUCTOR */
     public Account(String acctName, double initBalance) {
-        balance = initBalance;
         name = acctName;
+        balance = initBalance;
+        checking = new CheckingAccount();
     }
 
     /* GETTERS */

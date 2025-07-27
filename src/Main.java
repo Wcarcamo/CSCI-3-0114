@@ -5,7 +5,15 @@ package src;
 //  Demonstrates the use of the JOptionPane class.
 //********************************************************************
 import javax.swing.JOptionPane;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.text.NumberFormat;
 
 public class Main {
@@ -23,8 +31,11 @@ public class Main {
         */
         // sampleRun();
         
-        // Initialize Account before presenting Main Menu GUI Option Panel
-        if (initializeAccount()) {
+        // Set up Account before presenting Main Menu GUI Option Panel
+        // Users will be prompted if they would like to load an existing account
+        // from a file, if they do not load an account or there are issues
+        // loading the account, users will have to initialize a new account
+        if (loadAccount() || initializeAccount()) {
             // If setting up account was successful set up GUI menu 
             frame = new JFrame("Checking Account:");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -34,8 +45,8 @@ public class Main {
             frame.getContentPane().add(panel);
             frame.pack();
             frame.setVisible(true);
-        // If initialization fails, program will tell user that the session will close due 
-        // to not setting up an account
+        // If initialization fails, program will tell user that the session will
+        // close due to not setting up an account
         } else {
             JOptionPane.showMessageDialog(
                 null, 
@@ -47,6 +58,38 @@ public class Main {
     /*
      * HELPER FUNCTIONS:
      */
+
+     public static boolean loadAccount() {
+        boolean hasAccount;
+
+        // Prompt users to 
+        int selection = JOptionPane.showConfirmDialog(
+            null, 
+            "Would you like to use an existing account?", 
+            "Load Account", 
+            JOptionPane.YES_NO_OPTION
+        );
+
+        if (selection == JOptionPane.YES_OPTION) {
+            if(openFile())          
+                hasAccount = true;
+            else {
+                JOptionPane.showMessageDialog(
+                    null, 
+                    (
+                        "Account was not loaded.\n" +
+                        "Please create a new account."
+                    ),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+                hasAccount = false; 
+            }
+        }
+        else
+            hasAccount = false;
+
+        return hasAccount;
+     }
     
     // Prompts user to set up an account before presenting the GUI main menu
     public static boolean initializeAccount() {
@@ -171,6 +214,94 @@ public class Main {
             case 3: return "Srv. Chg.";
             default: return "Invalid Code";
         }
+    }
+
+    public static boolean openFile() {
+        boolean fileOpened;
+
+        // Create File Chooser and set initial settings
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Choose File to Open");
+        fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
+
+        // Prompt user to select a file
+        int result = fileChooser.showOpenDialog(null);
+        // Handle submitted file
+        if (result == JFileChooser.APPROVE_OPTION) {
+            // Get their file
+            File selectedFile = fileChooser.getSelectedFile();
+
+            // Try loading the file with their account data
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(selectedFile))) {
+                myAccount = (Account) ois.readObject();
+                // If successful set and return the status of the function
+                fileOpened = true;
+                // System.out.println("Name: " + myAccount.getName());
+                // System.out.println("Balance: " + myAccount.getBalance());
+            // If problems arise, return status of the function as false
+            } catch (IOException | ClassNotFoundException e) {
+                fileOpened = false;
+            }
+        // User canceled 
+        } else {
+            fileOpened = false;
+        }
+        
+        return fileOpened;
+    }
+
+    public static void saveFile() {
+        int selection = JOptionPane.showConfirmDialog(
+            null, 
+            "Would you like to use the current default file:\n./acct.dat", 
+            "Select An Option", 
+            JOptionPane.YES_NO_CANCEL_OPTION
+        );
+
+        if (selection == JOptionPane.YES_OPTION) {
+            try (ObjectOutputStream oos = new ObjectOutputStream(
+                    new FileOutputStream("acct.dat")
+                )
+            ) {
+                oos.writeObject(Main.myAccount);
+                System.out.println("Object serialized successfully.");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else if (selection == JOptionPane.NO_OPTION) {
+            // Create a JFrame for the JFileChooser dialog
+            JFrame frameSave = new JFrame("Save Object");
+            frameSave.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+            // Create a JFileChooser
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Save"); // Set dialog title
+            fileChooser.setCurrentDirectory(new File(System.getProperty("user.home"))); // Start in user's home directory
+            // fileChooser.setSelectedFile(new File("objectData.ser")); // Suggest a default filename
+
+            // Show the save dialog
+            int result = fileChooser.showSaveDialog(frameSave);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                // Get the selected file
+                File selectedFile = fileChooser.getSelectedFile();
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(selectedFile))) {
+                    oos.writeObject(Main.myAccount);
+                    System.out.println("Object serialized successfully to: " + selectedFile.getAbsolutePath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    System.err.println("Error saving file: " + e.getMessage());
+                }
+            } else {
+                System.out.println("Save operation canceled by user.");
+            }
+
+            // Optional: Dispose of the frame if you don't need it anymore
+            frameSave.dispose();
+        }
+
+        // if (selection != JOptionPane.CANCEL_OPTION) {
+            
+        // }
     }
 
     // Test Script for sample run - got tired of manually testing GUI

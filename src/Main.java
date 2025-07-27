@@ -7,7 +7,7 @@ package src;
 import javax.swing.JOptionPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-
+import java.awt.event.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -38,7 +38,14 @@ public class Main {
         if (loadAccount() || initializeAccount()) {
             // If setting up account was successful set up GUI menu 
             frame = new JFrame("Checking Account:");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+
+            frame.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    saveOnClose();
+                }
+            });
             
             // Display the 4 options in the panel in the Main Menu
             CheckOptionsPanel panel = new CheckOptionsPanel();
@@ -252,15 +259,18 @@ public class Main {
         return fileOpened;
     }
 
-    public static void saveFile() {
-        int selection = JOptionPane.showConfirmDialog(
+    public static boolean saveFile() {
+        boolean saved;
+        // Prompt user how to save
+        int save = JOptionPane.showConfirmDialog(
             null, 
             "Would you like to use the current default file:\n./acct.dat", 
             "Select An Option", 
             JOptionPane.YES_NO_CANCEL_OPTION
         );
 
-        if (selection == JOptionPane.YES_OPTION) {
+        // User selects to save using default location and filename
+        if (save == JOptionPane.YES_OPTION) {
             try (ObjectOutputStream oos = new ObjectOutputStream(
                     new FileOutputStream("acct.dat")
                 )
@@ -268,44 +278,89 @@ public class Main {
                 oos.writeObject(Main.myAccount);
                 // Make sure isModified is reset after every save
                 myAccount.resetModified();
-                System.out.println("Object serialized successfully.");
+                saved = true;
             } catch (IOException e) {
-                e.printStackTrace();
+                saved = false;
             }
-        } else if (selection == JOptionPane.NO_OPTION) {
+        // Users selects where and how to name filename using filechooser
+        } else if (save == JOptionPane.NO_OPTION) {
             // Create a JFrame for the JFileChooser dialog
             JFrame frameSave = new JFrame("Save Object");
             frameSave.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-            // Create a JFileChooser
+            // Create a JFileChooser window with some default settings
             JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setDialogTitle("Save"); // Set dialog title
-            fileChooser.setCurrentDirectory(new File(System.getProperty("user.home"))); // Start in user's home directory
-            // fileChooser.setSelectedFile(new File("objectData.ser")); // Suggest a default filename
+            fileChooser.setDialogTitle("Save");
+            fileChooser.setCurrentDirectory(
+                new File(System.getProperty("user.home"))
+            );
 
-            // Show the save dialog
+            // Show the save JFileChooser window
             int result = fileChooser.showSaveDialog(frameSave);
+            // Handle submited file
             if (result == JFileChooser.APPROVE_OPTION) {
                 // Get the selected file
                 File selectedFile = fileChooser.getSelectedFile();
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(selectedFile))) {
+                // Write to the file
+                try (
+                    ObjectOutputStream oos = new ObjectOutputStream(
+                        new FileOutputStream(selectedFile)
+                    )
+                ) {
                     oos.writeObject(Main.myAccount);
-                    System.out.println("Object serialized successfully to: " + selectedFile.getAbsolutePath());
+                    // Make sure isModified is reset after every save
+                    myAccount.resetModified();
+                    saved = true;
                 } catch (IOException e) {
-                    e.printStackTrace();
-                    System.err.println("Error saving file: " + e.getMessage());
+                    saved = false;
                 }
+            // Exit if user cancels/closes filechooser
             } else {
-                System.out.println("Save operation canceled by user.");
+                saved = false;
             }
 
-            // Optional: Dispose of the frame if you don't need it anymore
             frameSave.dispose();
+        // Handle user canceling initial dialog box
+        } else {
+            saved = false;
         }
 
-        // if (selection != JOptionPane.CANCEL_OPTION) {
-            
-        // }
+        return saved;
+    }
+    
+    private static void saveOnClose() {
+        if (Main.myAccount.getModifed()) {
+            // Prompt user to save changes
+            int option = JOptionPane.showConfirmDialog(
+                null,
+                (
+                    "The data in the application is not saved.\n" +
+                    "Would you like to save it before exiting the application?"
+                ),
+                "Select an Option",
+                JOptionPane.YES_NO_OPTION
+            );
+
+            if (option == JOptionPane.YES_OPTION) {
+                if(saveFile()) {
+                    // Exit only if save was successful (user didn't cancel)
+                    frame.dispose();
+                    System.exit(0);
+                // Recursive call to make sure if use does not want to save
+                } else {
+                    saveOnClose();
+                }
+            } else {
+                // Exit without saving
+                frame.dispose();
+                System.exit(0);
+            }
+            // CANCEL_OPTION does nothing, keeping the frame open
+        } else {
+            // No changes, exit directly
+            frame.dispose();
+            System.exit(0);
+        }
     }
 
     // Test Script for sample run - got tired of manually testing GUI

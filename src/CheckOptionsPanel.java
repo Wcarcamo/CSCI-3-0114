@@ -286,7 +286,6 @@ public class CheckOptionsPanel extends JPanel {
                 // Get a summary of transaction with all service charges 
                 // applied and display it to the user
                 String summary = newDeposit.setSummary();
-                System.out.println("Deposit Amount " + newDeposit.getTransAmount());
                 JOptionPane.showMessageDialog(
                     null, 
                     summary,

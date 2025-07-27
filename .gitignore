@@ -26,6 +26,9 @@ replay_pid*
 # Exclude PDFs
 *.pdf
 
+# Exclude .dat files for Class file saves
+*.dat
+
 # Exclude vscode settings
 
 .vscode/

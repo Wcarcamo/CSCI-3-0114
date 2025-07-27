@@ -18,6 +18,7 @@ public class Account implements Serializable {
     /* GETTERS */
     public String getName() {return name;}
     public double getBalance() {return balance;}
+    public boolean getModifed() {return isModified;}
 
     /* SETTERS */
     public void setName(String name) {this.name = name;}

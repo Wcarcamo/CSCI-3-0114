@@ -234,6 +234,8 @@ public class Main {
             // Try loading the file with their account data
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(selectedFile))) {
                 myAccount = (Account) ois.readObject();
+                // Make sure isModified is reset on new loads
+                myAccount.resetModified();
                 // If successful set and return the status of the function
                 fileOpened = true;
                 // System.out.println("Name: " + myAccount.getName());
@@ -264,6 +266,8 @@ public class Main {
                 )
             ) {
                 oos.writeObject(Main.myAccount);
+                // Make sure isModified is reset after every save
+                myAccount.resetModified();
                 System.out.println("Object serialized successfully.");
             } catch (IOException e) {
                 e.printStackTrace();

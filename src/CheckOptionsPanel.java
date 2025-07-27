@@ -189,6 +189,8 @@ public class CheckOptionsPanel extends JPanel {
             number
         );
         Main.myAccount.checking.addTransaction(newCheck);
+        // Mark account as modified
+        Main.myAccount.setModified(true);
 
         // Get a summary of transaction with all service charges applied and
         // display it to the user
@@ -278,6 +280,9 @@ public class CheckOptionsPanel extends JPanel {
                     checksAmount
                 );
                 Main.myAccount.checking.addTransaction(newDeposit);
+                // Mark account as modified
+                Main.myAccount.setModified(true);
+
                 // Get a summary of transaction with all service charges 
                 // applied and display it to the user
                 String summary = newDeposit.setSummary();

@@ -69,7 +69,7 @@ public class Main {
      public static boolean loadAccount() {
         boolean hasAccount;
 
-        // Prompt users to 
+        // Prompt users if they have an account they would like to load
         int selection = JOptionPane.showConfirmDialog(
             null, 
             "Would you like to use an existing account?", 
@@ -77,9 +77,14 @@ public class Main {
             JOptionPane.YES_NO_OPTION
         );
 
+        // Handle yes
         if (selection == JOptionPane.YES_OPTION) {
+            // Call helper function to handle opening the file 
+            // and setting return value of true
             if(openFile())          
                 hasAccount = true;
+            // If a problem arises while trying to open a file that is not valid
+            // let users know they will need to initialize an account instead
             else {
                 JOptionPane.showMessageDialog(
                     null, 
@@ -92,6 +97,8 @@ public class Main {
                 hasAccount = false; 
             }
         }
+        // Handle no, returns false so user is then routed to initialize 
+        // an account
         else
             hasAccount = false;
 
@@ -239,7 +246,9 @@ public class Main {
             File selectedFile = fileChooser.getSelectedFile();
 
             // Try loading the file with their account data
-            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(selectedFile))) {
+            try (ObjectInputStream ois = new ObjectInputStream(
+                new FileInputStream(selectedFile))
+            ) {
                 myAccount = (Account) ois.readObject();
                 // Make sure isModified is reset on new loads
                 myAccount.resetModified();
@@ -251,7 +260,7 @@ public class Main {
             } catch (IOException | ClassNotFoundException e) {
                 fileOpened = false;
             }
-        // User canceled 
+        // User canceled, returned false 
         } else {
             fileOpened = false;
         }
@@ -355,9 +364,8 @@ public class Main {
                 frame.dispose();
                 System.exit(0);
             }
-            // CANCEL_OPTION does nothing, keeping the frame open
+        // No changes detected, exit directly
         } else {
-            // No changes, exit directly
             frame.dispose();
             System.exit(0);
         }

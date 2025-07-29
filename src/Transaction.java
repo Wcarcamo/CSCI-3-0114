@@ -1,6 +1,7 @@
 package src;
+import java.io.Serializable;
 
-public class Transaction {
+public class Transaction implements Serializable {
     private int transId;
     private int transCode;
     private double transAmt;

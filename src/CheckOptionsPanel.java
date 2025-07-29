@@ -6,7 +6,7 @@ import java.awt.event.*;
 
 public class CheckOptionsPanel extends JPanel {
     private JLabel prompt;
-    private JRadioButton one, two, three, four;
+    private JRadioButton one, two, three, four, five, six;
 
     //-----------------------------------------------------------------
     //  Sets up a panel with a label and a set of radio buttons
@@ -31,18 +31,30 @@ public class CheckOptionsPanel extends JPanel {
         four = new JRadioButton("List All Deposits");
         four.setFont(new Font("Helvetica", Font.BOLD, 12));
         four.setBackground(Color.green);
+        
+        five = new JRadioButton("Open File");
+        five.setFont(new Font("Helvetica", Font.BOLD, 12));
+        five.setBackground(Color.green);
+        
+        six = new JRadioButton("Save File");
+        six.setFont(new Font("Helvetica", Font.BOLD, 12));
+        six.setBackground(Color.green);
 
         ButtonGroup group = new ButtonGroup();
         group.add(one);
         group.add(two);
         group.add(three);
         group.add(four);
+        group.add(five);
+        group.add(six);
 
         EOptionListener listener = new EOptionListener();
         one.addActionListener(listener);
         two.addActionListener(listener);
         three.addActionListener(listener);
         four.addActionListener(listener);
+        five.addActionListener(listener);
+        six.addActionListener(listener);
 
       // add the components to the JPanel
         add(prompt);
@@ -50,6 +62,8 @@ public class CheckOptionsPanel extends JPanel {
         add(two);
         add(three);
         add(four);
+        add(five);
+        add(six);
         setBackground(Color.green);
         setPreferredSize(new Dimension(300, 300));
     }
@@ -73,6 +87,10 @@ public class CheckOptionsPanel extends JPanel {
                 listAll("Checks");
             } else if (source == four) {
                 listAll("Deposits");
+            } else if (source == five) {
+                Main.openFile();
+            } else if (source == six) {
+                Main.saveFile();
             } 
         }
     }
@@ -171,6 +189,8 @@ public class CheckOptionsPanel extends JPanel {
             number
         );
         Main.myAccount.checking.addTransaction(newCheck);
+        // Mark account as modified
+        Main.myAccount.setModified(true);
 
         // Get a summary of transaction with all service charges applied and
         // display it to the user
@@ -260,10 +280,12 @@ public class CheckOptionsPanel extends JPanel {
                     checksAmount
                 );
                 Main.myAccount.checking.addTransaction(newDeposit);
+                // Mark account as modified
+                Main.myAccount.setModified(true);
+
                 // Get a summary of transaction with all service charges 
                 // applied and display it to the user
                 String summary = newDeposit.setSummary();
-                System.out.println("Deposit Amount " + newDeposit.getTransAmount());
                 JOptionPane.showMessageDialog(
                     null, 
                     summary,

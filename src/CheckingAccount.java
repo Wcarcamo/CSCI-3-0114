@@ -1,7 +1,8 @@
 package src;
 import java.util.ArrayList;
+import java.io.Serializable;
 
-public class CheckingAccount {
+public class CheckingAccount implements Serializable {
     protected ArrayList<Transaction> transactions;
     private double totalServiceCharge = 0.0;
     private int transactionID = 0;

@@ -5,8 +5,12 @@ package src;
 //  Demonstrates the use of the JOptionPane class.
 //********************************************************************
 import javax.swing.JOptionPane;
+import javax.swing.JTextArea;
+
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JMenuBar;
+
 import java.awt.event.*;
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,6 +23,8 @@ import java.text.NumberFormat;
 public class Main {
     public static JFrame frame;
     public static Account myAccount;
+    public static FileMenu fileMenu;
+    public static JTextArea ta;
 
     /*
      * MAIN
@@ -47,9 +53,17 @@ public class Main {
                 }
             });
             
+            // Create JMenuBar
+            JMenuBar bar = new JMenuBar();
+            fileMenu = new FileMenu();
+            bar.add(fileMenu);
+            frame.setJMenuBar(bar);
+
             // Display the 4 options in the panel in the Main Menu
-            CheckOptionsPanel panel = new CheckOptionsPanel();
-            frame.getContentPane().add(panel);
+            // CheckOptionsPanel panel = new CheckOptionsPanel();
+            // ta = new JTextArea(10,50);
+            // frame.getContentPane().add(ta);
+            frame.setSize(200, 300);
             frame.pack();
             frame.setVisible(true);
         // If initialization fails, program will tell user that the session will

@@ -6,11 +6,8 @@ package src;
 //********************************************************************
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
-
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JMenuBar;
-
 import java.awt.event.*;
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,58 +19,39 @@ import java.text.NumberFormat;
 
 public class Main {
     public static JFrame frame;
+    public static MenuBar menuBar;
     public static Account myAccount;
-    public static FileMenu fileMenu;
     public static JTextArea ta;
 
     /*
      * MAIN
      */
     public static void main(String[] args) {;
-        /* 
-            Uncomment line below during development to test transactions 
-            using function instead of manually entering everything through GUI
-            every single time for regression testing
-        */
-        // sampleRun();
+        // Start up application
+        frame = new JFrame("Checking Account:");
         
-        // Set up Account before presenting Main Menu GUI Option Panel
-        // Users will be prompted if they would like to load an existing account
-        // from a file, if they do not load an account or there are issues
-        // loading the account, users will have to initialize a new account
-        if (loadAccount() || initializeAccount()) {
-            // If setting up account was successful set up GUI menu 
-            frame = new JFrame("Checking Account:");
-            frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        // Create custom listener to prompt user to save before closing
+        // TODO: Implement new save method with vector data
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        // frame.addWindowListener(new WindowAdapter() {
+        //     @Override
+        //     public void windowClosing(WindowEvent e) {
+        //         saveOnClose();
+        //     }
+        // });
+        
+        // Create & Set JMenuBar
+        menuBar = new MenuBar();
+        frame.setJMenuBar(menuBar);
 
-            frame.addWindowListener(new WindowAdapter() {
-                @Override
-                public void windowClosing(WindowEvent e) {
-                    saveOnClose();
-                }
-            });
-            
-            // Create JMenuBar
-            JMenuBar bar = new JMenuBar();
-            fileMenu = new FileMenu();
-            bar.add(fileMenu);
-            frame.setJMenuBar(bar);
-
-            // Display the 4 options in the panel in the Main Menu
-            // CheckOptionsPanel panel = new CheckOptionsPanel();
-            // ta = new JTextArea(10,50);
-            // frame.getContentPane().add(ta);
-            frame.setSize(200, 300);
-            frame.pack();
-            frame.setVisible(true);
-        // If initialization fails, program will tell user that the session will
-        // close due to not setting up an account
-        } else {
-            JOptionPane.showMessageDialog(
-                null, 
-                "Account not set up, your session will close."
-            );
-        }
+        // Create Text Area for Text
+        ta = new JTextArea(10,50);
+        frame.getContentPane().add(ta);
+        
+        // Display application frame
+        frame.pack();
+        frame.setVisible(true);
     }
 
     /*
@@ -383,92 +361,5 @@ public class Main {
             frame.dispose();
             System.exit(0);
         }
-    }
-
-    // Test Script for sample run - got tired of manually testing GUI
-    public static void sampleRun() {
-        double tmpAmount, tmpCash, tmpChecks;
-        Check tmpCheck;
-        Deposit tmpDeposit;
-        
-        myAccount = new Account("Will", 500.0);
-
-        System.out.println("TRANSACTION # 1: CHECK - $50");
-        tmpAmount = 50;
-        myAccount.setBalance(myAccount.getBalance() - tmpAmount);
-        tmpCheck = new Check(
-            myAccount.checking.getTransactionID(), 
-            TransactionCode.CHECK.ordinal(), 
-            tmpAmount, 
-            999
-        );
-        myAccount.checking.addTransaction(tmpCheck);
-        System.out.print(tmpCheck.setSummary());
-        System.out.print("\n\n");
-        
-        System.out.println("TRANSACTION # 2: DEPOSIT - $35 + 35");
-        tmpCash = 35;
-        tmpChecks = 35;
-        tmpAmount = tmpCash + tmpChecks;
-        myAccount.setBalance(myAccount.getBalance() + tmpAmount);
-        tmpDeposit = new Deposit(
-            myAccount.checking.getTransactionID(), 
-            TransactionCode.DEPOSIT.ordinal(), 
-            tmpCash, 
-            tmpChecks
-        );
-        myAccount.checking.addTransaction(tmpDeposit);
-        System.out.print(tmpDeposit.setSummary());
-        System.out.print("\n\n  ");
-
-        System.out.println("TRANSACTION # 3: CHECK - $480");
-        tmpAmount = 480;
-        myAccount.setBalance(myAccount.getBalance() - tmpAmount);
-        tmpCheck = new Check(
-            myAccount.checking.getTransactionID(), 
-            TransactionCode.CHECK.ordinal(), 
-            tmpAmount, 
-            1000
-        );
-        myAccount.checking.addTransaction(tmpCheck);
-        System.out.print(tmpCheck.setSummary());
-        System.out.print("\n\n");
-
-        System.out.println("TRANSACTION # 4: DEPOSIT - $60 + 0");
-        tmpCash = 60;
-        tmpChecks = 0;
-        tmpAmount = tmpCash + tmpChecks;
-        myAccount.setBalance(myAccount.getBalance() + tmpAmount);
-        tmpDeposit = new Deposit(
-            myAccount.checking.getTransactionID(), 
-            TransactionCode.DEPOSIT.ordinal(), 
-            tmpCash, 
-            tmpChecks
-        );
-        myAccount.checking.addTransaction(tmpDeposit);
-        System.out.print(tmpDeposit.setSummary());
-        System.out.print("\n\n  ");
-
-        System.out.println("TRANSACTION # 5: CHECK - $125");
-        tmpAmount = 125;
-        myAccount.setBalance(myAccount.getBalance() - tmpAmount);
-        tmpCheck = new Check(
-            myAccount.checking.getTransactionID(), 
-            TransactionCode.CHECK.ordinal(), 
-            tmpAmount, 
-            1
-        );
-        myAccount.checking.addTransaction(tmpCheck);
-        System.out.print(tmpCheck.setSummary());
-        System.out.print("\n\n");
-
-        System.out.print(
-            "TODO: Next week think about how to test list dialog boxes " +
-            "that are in private methods of CheckOptionsPanel class..."
-        );
-        System.out.print("\n\n");
-
-        System.out.print(myAccount.checking.toString());
-        System.out.print("\n\n");
     }
 }

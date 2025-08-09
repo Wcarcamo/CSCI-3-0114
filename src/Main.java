@@ -1,45 +1,47 @@
 package src;
-//-----------------------------------------------------------------
-//  Demonstrates the use of radio buttons with listener
-//  and multiple dialog boxes for user interaction.
-//  Demonstrates the use of the JOptionPane class.
-//********************************************************************
-import javax.swing.JOptionPane;
-import javax.swing.JTextArea;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import java.awt.event.*;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+
+import javax.swing.*;
+// import javax.swing.JOptionPane;
+// import javax.swing.JTextArea;
+// import javax.swing.JFileChooser;
+// import javax.swing.JFrame;
+import java.io.*;
+// import java.io.File;
+// import java.io.FileInputStream;
+// import java.io.FileOutputStream;
+// import java.io.IOException;
+// import java.io.ObjectInputStream;
+// import java.io.ObjectOutputStream;
+import java.util.Vector;
 import java.text.NumberFormat;
+import java.awt.Font;
+import java.awt.event.*; // needed for windowlistener
 
 public class Main {
     public static JFrame frame;
     public static MenuBar menuBar;
-    public static Account myAccount;
     public static JTextArea ta;
+    public static Vector<Account> dataStore;
+    public static Account account;
+    public static boolean saved;
 
     /*
      * MAIN
      */
-    public static void main(String[] args) {;
+    public static void main(String[] args) {
+        dataStore = new Vector<Account>();
         // Start up application
         frame = new JFrame("Checking Account:");
         
         // Create custom listener to prompt user to save before closing
-        // TODO: Implement new save method with vector data
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        // frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        // frame.addWindowListener(new WindowAdapter() {
-        //     @Override
-        //     public void windowClosing(WindowEvent e) {
-        //         saveOnClose();
-        //     }
-        // });
+        // frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                saveOnClose();
+            }
+        });
         
         // Create & Set JMenuBar
         menuBar = new MenuBar();
@@ -47,6 +49,7 @@ public class Main {
 
         // Create Text Area for Text
         ta = new JTextArea(10,50);
+        ta.setFont(new Font("Monospaced", Font.PLAIN, 12));
         frame.getContentPane().add(ta);
         
         // Display application frame
@@ -54,117 +57,57 @@ public class Main {
         frame.setVisible(true);
     }
 
-    /*
-     * HELPER FUNCTIONS:
-     */
-
-     public static boolean loadAccount() {
-        boolean hasAccount;
-
-        // Prompt users if they have an account they would like to load
-        int selection = JOptionPane.showConfirmDialog(
-            null, 
-            "Would you like to use an existing account?", 
-            "Load Account", 
-            JOptionPane.YES_NO_OPTION
-        );
-
-        // Handle yes
-        if (selection == JOptionPane.YES_OPTION) {
-            // Call helper function to handle opening the file 
-            // and setting return value of true
-            if(openFile())          
-                hasAccount = true;
-            // If a problem arises while trying to open a file that is not valid
-            // let users know they will need to initialize an account instead
-            else {
-                JOptionPane.showMessageDialog(
-                    null, 
-                    (
-                        "Account was not loaded.\n" +
-                        "Please create a new account."
-                    ),
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-                hasAccount = false; 
-            }
-        }
-        // Handle no, returns false so user is then routed to initialize 
-        // an account
-        else
-            hasAccount = false;
-
-        return hasAccount;
-     }
+    /**************************************************************************
+        HELPER FUNCTIONS:
+    **************************************************************************/ 
     
-    // Prompts user to set up an account before presenting the GUI main menu
-    public static boolean initializeAccount() {
-        // First get users account name and initial balance
-        String name = JOptionPane.showInputDialog(
-            null,
-            "Enter the Account Name:",
-            "Account Name",
-            JOptionPane.QUESTION_MESSAGE
-        );
-        String balance = JOptionPane.showInputDialog(
-            null, 
-            "Enter your initial balance:", 
-            "Initial Balance", 
-            JOptionPane.QUESTION_MESSAGE
-        );
+    public static void initializeAccount() {
+        // Purpose: Create a new account, add it to vector datastore
 
-        // Validation Check of user input for initial balance, accepts a balance
-        // string and calls another helper function
-        if (isValid(balance)) {
-            // If balance is acceptable, then create a checking account
-            myAccount = new Account(name, Double.parseDouble(balance));
-            // Retuns true which allows main to continue and present GUI panel
-            return true;
+        // Get an account name and initial balance
+        String name = dialogQuestion("Account Name", "Enter the Account Name:");
+        String balance = dialogQuestion("Initial Balance", "Enter your initial balance:");
+
+        // Validation of initial balance, by calling another helper function
+        if (!emptyInput(balance) && validDouble(balance)) {
+            // If balance is acceptable, then create a new account
+            account = new Account(name, Double.parseDouble(balance));
+            // Add account to vector datastore and let user know
+            dataStore.add(account);
+            ta.setText("New account added for " + name);
+            promptToSave();
         // If balance is invalid, then returns false, give user feedback why
         // and prevent showing main menu GUI
+        } else {
+            ta.setText("Account not added.");
+        }
+    }
+
+    public static boolean emptyInput(String input) {
+        // Given a String input from a JOptionPane input dialog box, checks if the 
+        // input is empty or dialog canceled
+        if (input == null || input.trim().isEmpty()) {
+            dialogError("No input provided.");
+            return true;
         } else {
             return false;
         }
     }
 
-    // Given a String input from a JOptionPane input dialog box, checks if the 
-    // input can be converted to a valid double data type, 
-    // returns boolean if successful or not
-    public static boolean isValid(String input) {
-        // Verify if user did not cancel the dialog box or inputed an empty string
-        if (input == null || input.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(
-                null, 
-                "No input provided.", 
-                "Error", 
-                JOptionPane.ERROR_MESSAGE
-            );
-            return false;
-        }
-
+    public static boolean validDouble(String input) {
         // Attempt to parse user input and cast to a double
         try {
             double number = Double.parseDouble(input);
             // Also check if input number is negative
             // i.e. user should not be writing checks with negative amounts
             if (number < 0) {
-                JOptionPane.showMessageDialog(
-                    null, 
-                    "Input cannot be negative.", 
-                    "Error", 
-                    JOptionPane.ERROR_MESSAGE
-                );
+                dialogError("Input cannot be negative.");
                 return false;
             }
             return true;
         // If parse fails, let user know their input was invalid
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(
-                null, 
-                "Invalid input.", 
-                "Error", 
-                JOptionPane.ERROR_MESSAGE
-            );
+            dialogError("Invalid input.");
             return false;
         }
     }
@@ -183,12 +126,7 @@ public class Main {
             // Also check if input number is negative,
             // i.e. user should not be using negative amounts
             if (number < 0) {
-                JOptionPane.showMessageDialog(
-                    null, 
-                    "Input cannot be negative.", 
-                    "Error", 
-                    JOptionPane.ERROR_MESSAGE
-                );
+                dialogError("Input cannot be negative.");
                 return true;
             }
             return false;
@@ -222,6 +160,7 @@ public class Main {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public static boolean openFile() {
         boolean fileOpened;
 
@@ -241,13 +180,13 @@ public class Main {
             try (ObjectInputStream ois = new ObjectInputStream(
                 new FileInputStream(selectedFile))
             ) {
-                myAccount = (Account) ois.readObject();
-                // Make sure isModified is reset on new loads
-                myAccount.resetModified();
+                dataStore = (Vector<Account>)ois.readObject();
+                // On default, load first element, TODO: Change later
+                account = dataStore.elementAt(0);
+                saved = true;
                 // If successful set and return the status of the function
                 fileOpened = true;
-                // System.out.println("Name: " + myAccount.getName());
-                // System.out.println("Balance: " + myAccount.getBalance());
+                ois.close();
             // If problems arise, return status of the function as false
             } catch (IOException | ClassNotFoundException e) {
                 fileOpened = false;
@@ -261,7 +200,6 @@ public class Main {
     }
 
     public static boolean saveFile() {
-        boolean saved;
         // Prompt user how to save
         int save = JOptionPane.showConfirmDialog(
             null, 
@@ -276,9 +214,7 @@ public class Main {
                     new FileOutputStream("acct.dat")
                 )
             ) {
-                oos.writeObject(Main.myAccount);
-                // Make sure isModified is reset after every save
-                myAccount.resetModified();
+                oos.writeObject(dataStore);
                 saved = true;
             } catch (IOException e) {
                 saved = false;
@@ -308,9 +244,8 @@ public class Main {
                         new FileOutputStream(selectedFile)
                     )
                 ) {
-                    oos.writeObject(Main.myAccount);
+                    oos.writeObject(dataStore);
                     // Make sure isModified is reset after every save
-                    myAccount.resetModified();
                     saved = true;
                 } catch (IOException e) {
                     saved = false;
@@ -330,7 +265,7 @@ public class Main {
     }
     
     private static void saveOnClose() {
-        if (Main.myAccount.getModifed()) {
+        if (!saved) {
             // Prompt user to save changes
             int option = JOptionPane.showConfirmDialog(
                 null,
@@ -361,5 +296,53 @@ public class Main {
             frame.dispose();
             System.exit(0);
         }
+    }
+
+    public static void promptToSave() {
+        saved = false;
+    }
+
+    public static String dialogQuestion(String message) {
+        return JOptionPane.showInputDialog(
+            null,
+            message,
+            null,
+            JOptionPane.QUESTION_MESSAGE
+        );
+    } 
+    public static String dialogQuestion(String title, String message) {
+        return JOptionPane.showInputDialog(
+            null,
+            message,
+            title,
+            JOptionPane.QUESTION_MESSAGE
+        );
+    } 
+
+    public static void dialogError(String message) {
+        JOptionPane.showMessageDialog(
+            null, 
+            message, 
+            "Error", 
+            JOptionPane.ERROR_MESSAGE
+        );
+    }
+
+    public static void dialogInfo(String message) {
+        JOptionPane.showMessageDialog(
+            null, 
+            message, 
+            "Message", 
+            JOptionPane.INFORMATION_MESSAGE
+        );
+    }
+    
+    public static int dialogConfirm(String message) {
+        return JOptionPane.showConfirmDialog(
+            null, 
+            message, 
+            null, 
+            JOptionPane.YES_NO_CANCEL_OPTION
+        );
     }
 }

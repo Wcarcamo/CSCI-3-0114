@@ -25,7 +25,7 @@ public class Deposit extends Transaction {
         String print = "Transaction: Deposit in Amount of ";
         print += Main.formatDollar(this.getTransAmount()) + "\n";
         print += "Current Balance: ";
-        print += Main.formatDollar(Main.myAccount.getBalance()) + "\n";
+        print += Main.formatDollar(Main.account.getBalance()) + "\n";
         
         return print;
     }

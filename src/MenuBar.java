@@ -81,7 +81,7 @@ public class MenuBar extends JMenuBar{
             } else if (source.equals("Save File")) {
                 Main.saveFile();
             } else if (source.equals("Add New Account")) {
-                System.out.println("TODO:");
+                Main.initializeAccount();
             } else if (source.equals("List All Transactions")) {
                 listAll("Transactions");
             } else if (source.equals("List All Checks")) {
@@ -89,12 +89,11 @@ public class MenuBar extends JMenuBar{
             } else if (source.equals("List All Deposits")) {
                 listAll("Deposits");
             } else if (source.equals("List All Service Charges")) {
-                // listAll("Service Charges");
-                System.out.println("TODO:");
+                listAll("Service Charges");
             } else if (source.equals("Find An Account")) {
-                System.out.println("TODO:");
+                findAccount();
             } else if (source.equals("List All Accounts")) {
-                System.out.println("TODO:");
+                listAll("Accounts");
             } else if (source.equals("Enter Transactions")) {
                 enterTransaction();
             } else {
@@ -104,7 +103,7 @@ public class MenuBar extends JMenuBar{
     }
 
     /**************************************************************************
-        HELPER FUNCTIONS: Actions To Perform on selection of radio options
+        HELPER FUNCTIONS: Actions To Perform on selection of JMenu Items
     **************************************************************************/ 
 
     /* 
@@ -115,23 +114,23 @@ public class MenuBar extends JMenuBar{
         int again;
         // Hide main menu GUI
         Main.frame.setVisible(false);
+
+        if (Main.account == null) {
+            Main.dialogInfo("You must select an account first.");
+            return;
+        }
+
         // Start the transaction loop
         do {
             // User must enter a valid transaction code
-            String transaction = JOptionPane.showInputDialog(
-                null, "Enter your transaction code: "
-            );
+            String transaction = Main.dialogQuestion("Enter your transaction code: ");
+
             // Check users transaction code
             switch (transaction) {
                 // NULL check needed if user cancels first input dialog box 
                 case null: break;
                 case "0": 
-                    JOptionPane.showMessageDialog(
-                        null, 
-                        Main.myAccount.checking.toString(), 
-                        null, 
-                        JOptionPane.INFORMATION_MESSAGE
-                    ); 
+                    Main.dialogInfo(Main.account.checking.toString());
                     break;
                 // Call helper functions for checks and deposits
                 case "1": newCheck(); break;
@@ -139,17 +138,12 @@ public class MenuBar extends JMenuBar{
                 // Provide a default message to user if transaction code entered
                 // is invalid
                 default:
-                    JOptionPane.showMessageDialog(
-                        null, 
-                        "Invalid Code: Enter 0, 1, or 2.", 
-                        "Error", 
-                        JOptionPane.ERROR_MESSAGE
-                    );
+                    Main.dialogError("Invalid Code: Enter 0, 1, or 2.");
                     break;
             }
             // Prompt user if they need to enter another transaction, regardless
             //  if previous transaction was acceptable or if there was an issue
-            again = JOptionPane.showConfirmDialog(null, "Enter Another Transaction?");
+            again = Main.dialogConfirm("Enter Another Transaction?");
         } while (again == JOptionPane.YES_OPTION);
         
         // When user is done entering transactions display main menu GUI again
@@ -162,55 +156,42 @@ public class MenuBar extends JMenuBar{
         double amount;
 
         // Get user check number and check if it's valid
-        String checkNumber = JOptionPane.showInputDialog(
-            null, 
-            "Enter your check number: ", 
-            null, 
-            JOptionPane.QUESTION_MESSAGE
-        );
-        if (Main.isValid(checkNumber)) {
+        String checkNumber = Main.dialogQuestion("Enter your check number: ");
+        
+        if (!Main.emptyInput(checkNumber) && Main.validDouble(checkNumber)) {
             number = Integer.parseInt(checkNumber);
         } else {
             return;
         }
             
         // Get user check amount and check if it's valid
-        String checkAmount = JOptionPane.showInputDialog(
-            null, 
-            "Enter your check amount: ", 
-            null, 
-            JOptionPane.QUESTION_MESSAGE
-        );
-        if (Main.isValid(checkAmount)) {
+        String checkAmount = Main.dialogQuestion("Enter your check amount: ");
+
+        if (!Main.emptyInput(checkAmount) && Main.validDouble(checkAmount)) {
             amount = Double.parseDouble(checkAmount);
         } else {
             return;
         }
 
         // If valid check numbers and amount, update account balance
-        double newBalance = Main.myAccount.getBalance() - amount;
-        Main.myAccount.setBalance(newBalance);
+        double newBalance = Main.account.getBalance() - amount;
+        Main.account.setBalance(newBalance);
 
         // Creat a new check object and store it in checking transaction arraylist
         Check newCheck = new Check(
-            Main.myAccount.checking.getTransactionID(), 
+            Main.account.checking.getTransactionID(), 
             TransactionCode.CHECK.ordinal(), 
             amount, 
             number
         );
-        Main.myAccount.checking.addTransaction(newCheck);
-        // Mark account as modified
-        Main.myAccount.setModified(true);
+        Main.account.checking.addTransaction(newCheck);
+        // Mark datastore as modified
+        Main.saved = false;
 
         // Get a summary of transaction with all service charges applied and
         // display it to the user
         String summary = newCheck.setSummary();
-        JOptionPane.showMessageDialog(
-            null, 
-            summary,
-            null, 
-            JOptionPane.INFORMATION_MESSAGE
-        );        
+        Main.dialogInfo(summary);
     }
 
     // Handles logic for new deposit transactions
@@ -242,27 +223,17 @@ public class MenuBar extends JMenuBar{
             // If user clicked ok, check if both cash and checks input fields
             // were left blank, if they were then stop transaction
             if (
-                cash.getText().trim().isEmpty() && 
+                cash.getText().trim().isEmpty() &&
                 checks.getText().trim().isEmpty()
             ) {
-                JOptionPane.showMessageDialog(
-                    null, 
-                    "Both Cash and Checks are empty.", 
-                    "Error", 
-                    JOptionPane.ERROR_MESSAGE
-                );
+                Main.dialogError("Both Cash and Checks are empty.");
             // Check if either cash or checks contained invalid input, if at 
-            // least once is invalid stop transaction
+            // least one is invalid stop transaction
             } else if (
                 Main.isNotValid(cash.getText()) ||
                 Main.isNotValid(checks.getText())
             ) {
-                JOptionPane.showMessageDialog(
-                    null, 
-                    "Either Cash or Checks was invalid.", 
-                    "Error", 
-                    JOptionPane.ERROR_MESSAGE
-                );
+                Main.dialogError("Either Cash or Checks was invalid");
             // If no issues detected with either cash or check input, continue
             // depositing transaction
             } else {
@@ -279,38 +250,28 @@ public class MenuBar extends JMenuBar{
                 
                 // Update Balance with both deposits
                 double newBalance = (
-                    Main.myAccount.getBalance() + cashAmount + checksAmount
+                    Main.account.getBalance() + cashAmount + checksAmount
                 );
-                Main.myAccount.setBalance(newBalance);
+                Main.account.setBalance(newBalance);
                 // Create new deposit object and add to transaction arraylist
                 Deposit newDeposit = new Deposit(
-                    Main.myAccount.checking.getTransactionID(), 
+                    Main.account.checking.getTransactionID(), 
                     TransactionCode.DEPOSIT.ordinal(), 
                     cashAmount, 
                     checksAmount
                 );
-                Main.myAccount.checking.addTransaction(newDeposit);
-                // Mark account as modified
-                Main.myAccount.setModified(true);
+                Main.account.checking.addTransaction(newDeposit);
+                // Mark datastore as modified
+                Main.saved = false;
 
                 // Get a summary of transaction with all service charges 
                 // applied and display it to the user
                 String summary = newDeposit.setSummary();
-                JOptionPane.showMessageDialog(
-                    null, 
-                    summary,
-                    null, 
-                    JOptionPane.INFORMATION_MESSAGE
-                );
+                Main.dialogInfo(summary);
             }
         // Handle when user cancels deposit input window
         } else {
-            JOptionPane.showMessageDialog(
-                null, 
-                "Deposit Canceled.", 
-                "Error", 
-                JOptionPane.ERROR_MESSAGE
-            );
+            Main.dialogError("Deposit Canceled");
         }
     }
 
@@ -321,7 +282,12 @@ public class MenuBar extends JMenuBar{
         Main.frame.setVisible(false);
         // Create default header before listing type of transactions
         String message =  "List All " + type + "\n";
-        message += "Name: " + Main.myAccount.getName() + "\n\n";
+
+        if (!type.equals("Accounts")) {
+            message += Main.account.toString() + "\n";
+        } else {
+            message += "\n";
+        }
 
         // Handle Listing All Transactions
         if (type.equals("Transactions")) {
@@ -330,7 +296,7 @@ public class MenuBar extends JMenuBar{
                 "%-10s%-15s%-15s\n", "ID", "Type", "Amount"
             );
             // Loop through transactions array and get information from each record
-            for (Transaction eachTransaction : Main.myAccount.checking.transactions) {
+            for (Transaction eachTransaction : Main.account.checking.transactions) {
                 message += String.format(
                     "%-10s%-15s%-15s\n", 
                     eachTransaction.getTransId(),
@@ -345,8 +311,8 @@ public class MenuBar extends JMenuBar{
                 "%-10s%-10s%-15s\n", "ID", "Check", "Amount"
             );
         
-            // Loop through transactions array and get information fromChecks only
-            for (Transaction eachTrans : Main.myAccount.checking.transactions) {
+            // Loop through transactions array and get information from Checks only
+            for (Transaction eachTrans : Main.account.checking.transactions) {
                 // Filter based the transaction class instance
                 if (eachTrans instanceof Check) {
                     message += String.format(
@@ -365,8 +331,8 @@ public class MenuBar extends JMenuBar{
                 "ID", "Cash", "Check", "Amount"
             );
         
-            // Loop through transactions array and get information fromChecks only
-            for (Transaction eachTrans : Main.myAccount.checking.transactions) {
+            // Loop through transactions array and get information from Deposits only
+            for (Transaction eachTrans : Main.account.checking.transactions) {
                 // Filter based the transaction class instance
                 if (eachTrans instanceof Deposit) {
                     message += String.format(
@@ -378,14 +344,49 @@ public class MenuBar extends JMenuBar{
                     );
                 } 
             }
+            // Handle Listing All Deposits
+        } else if (type.equals("Service Charges")) {
+            // Format column header with standard spacing
+            message += String.format(
+                "%-10s%-15s\n", 
+                "ID", "Amount"
+            );
+        
+            // Loop through transactions array and get information from Deposits only
+            for (Transaction eachTrans : Main.account.checking.transactions) {
+                // Filter based the transaction class instance
+                if (eachTrans.getTransCode() == TransactionCode.SERVICE_CHARGE.ordinal()) {
+                    message += String.format(
+                        "%-10s%-15s\n", 
+                        eachTrans.getTransId(), 
+                        Main.formatDollar(eachTrans.getTransAmount())
+                    );
+                } 
+            }
+        } else if (type.equals("Accounts")) {
+            for (Account currentAccount : Main.dataStore) {
+                message += currentAccount.toString() + "\n";
+            }
         }
-        // Display list of specified transactions
-        JOptionPane.showMessageDialog(
-            null, 
-            message, 
-            type, 
-            JOptionPane.INFORMATION_MESSAGE
-        );
+        Main.ta.setText(message);
         Main.frame.setVisible(true);
+    }
+
+    public void findAccount() {
+        String search = Main.dialogQuestion("Enter the account name:");
+        boolean found = false;
+
+        for (Account accountElement : Main.dataStore) {
+            if (search.equals(accountElement.getName())) {
+                found = true;
+                Main.account = accountElement;
+            }
+        }
+
+        if (found) {
+            Main.ta.setText("Found account for " + search);
+        } else {
+            Main.ta.setText("Account not found for " + search);
+        }
     }
 }

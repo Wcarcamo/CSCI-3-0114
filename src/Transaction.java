@@ -34,7 +34,7 @@ public class Transaction implements Serializable {
 
         // Initialize transaction summary with information based on 
         // user input of the transaction
-        summary = Main.myAccount.getName() + "'s Account\n";
+        summary = Main.account.getName() + "'s Account\n";
         summary += toString();
 
         // Add optional service charge based on information within the 
@@ -43,34 +43,34 @@ public class Transaction implements Serializable {
         if (this instanceof Deposit) {
             // Default service Charge for all deposits
             summary += "Service Charge: Deposit --- charge $0.10\n";
-            Main.myAccount.checking.setServiceCharge(3, 0.10);
+            Main.account.checking.setServiceCharge(3, 0.10);
         }
         if (this instanceof Check) {
             // Default service charge for all checks
             summary += "Service Charge: Check --- charge $0.15\n";
-            Main.myAccount.checking.setServiceCharge(3, 0.15);
+            Main.account.checking.setServiceCharge(3, 0.15);
 
             // Additional service charges & warnings based on state conditions
             // of other classes
             if (
-                !Main.myAccount.checking.getChargedBelow500() &&
-                Main.myAccount.getBalance() < 500
+                !Main.account.checking.getChargedBelow500() &&
+                Main.account.getBalance() < 500
             ) {
-                Main.myAccount.checking.setChargedBelow500(true);
+                Main.account.checking.setChargedBelow500(true);
                 summary += "Service Charge: Below $500 --- charge $5.00\n";
-                Main.myAccount.checking.setServiceCharge(3, 5.0);
+                Main.account.checking.setServiceCharge(3, 5.0);
             }
-            if (Main.myAccount.getBalance() < 50) {
+            if (Main.account.getBalance() < 50) {
                 summary += "Warning: Balance below $50\n";
             }
-            if (Main.myAccount.getBalance() < 0) {
+            if (Main.account.getBalance() < 0) {
                 summary += "Service Charge: Below $0 --- charge $10.00\n";
-                Main.myAccount.checking.setServiceCharge(3, 10.0);
+                Main.account.checking.setServiceCharge(3, 10.0);
             }
         }
 
         summary += "Total Service Charge: ";
-        summary += Main.formatDollar(Main.myAccount.checking.getServiceCharge());
+        summary += Main.formatDollar(Main.account.checking.getServiceCharge());
         
         transSummary = summary;
         return summary;
@@ -83,7 +83,7 @@ public class Transaction implements Serializable {
         String print = "Transaction: Service Charge in Amount of ";
         print += Main.formatDollar(transAmt) + "\n";
         print += "Current Balance: ";
-        print += Main.formatDollar(Main.myAccount.getBalance()) + "\n";
+        print += Main.formatDollar(Main.account.getBalance()) + "\n";
 
         return print;
     }

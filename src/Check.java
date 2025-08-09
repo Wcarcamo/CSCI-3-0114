@@ -30,7 +30,7 @@ public class Check extends Transaction {
         String print = "Transaction: Check #" + this.getCheckNumber();
         print += " in Amount of " + Main.formatDollar(getTransAmount()) + "\n";
         print += "Current Balance: ";
-        print += Main.formatDollar(Main.myAccount.getBalance()) + "\n";
+        print += Main.formatDollar(Main.account.getBalance()) + "\n";
         return print;
     }
 }

@@ -45,7 +45,7 @@ public class CheckingAccount implements Serializable {
         PRINT 
     */
     public String toString() {
-        double balance = Main.myAccount.getBalance();
+        double balance = Main.account.getBalance();
         
         String print = "Transaction: End\n";
         print += "Current Balance: " + Main.formatDollar(balance) + "\n";

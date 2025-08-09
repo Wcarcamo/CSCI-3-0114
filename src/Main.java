@@ -1,21 +1,11 @@
 package src;
 
 import javax.swing.*;
-// import javax.swing.JOptionPane;
-// import javax.swing.JTextArea;
-// import javax.swing.JFileChooser;
-// import javax.swing.JFrame;
 import java.io.*;
-// import java.io.File;
-// import java.io.FileInputStream;
-// import java.io.FileOutputStream;
-// import java.io.IOException;
-// import java.io.ObjectInputStream;
-// import java.io.ObjectOutputStream;
 import java.util.Vector;
 import java.text.NumberFormat;
 import java.awt.Font;
-import java.awt.event.*; // needed for windowlistener
+import java.awt.event.*; // for windowlistener
 
 public class Main {
     public static JFrame frame;
@@ -25,9 +15,9 @@ public class Main {
     public static Account account;
     public static boolean saved;
 
-    /*
-     * MAIN
-     */
+    /**************************************************************************
+       MAIN
+    **************************************************************************/ 
     public static void main(String[] args) {
         dataStore = new Vector<Account>();
         // Start up application
@@ -95,11 +85,13 @@ public class Main {
     }
 
     public static boolean validDouble(String input) {
-        // Attempt to parse user input and cast to a double
+        // Given a String input from a JOptionPane input dialog box, checks if the 
+        // input can be parsed to double
+
         try {
             double number = Double.parseDouble(input);
             // Also check if input number is negative
-            // i.e. user should not be writing checks with negative amounts
+            // i.e. user should not be writing checks/deposits with negative amounts
             if (number < 0) {
                 dialogError("Input cannot be negative.");
                 return false;
@@ -112,9 +104,10 @@ public class Main {
         }
     }
 
-    // Validation check specifically for deposit transactions where 
-    // different rules apply to what is a valid input
     public static boolean isNotValid(String input) {
+        // Validation check specifically for deposit transactions where 
+        // different rules apply to what is a valid input
+
         // Deposits can be left blank for either cash or checks inputs
         if (input == null || input.trim().isEmpty()) {
             return false;
@@ -136,9 +129,9 @@ public class Main {
         }
     }
 
-    // Used to display dollar amounts in correct format, negatives should be 
-    // encased in parenthesis instead of usual '-' prefix
     public static String formatDollar(double amount) {
+        // Used to display dollar amounts in correct format, negatives should be 
+        // encased in parenthesis instead of usual '-' prefix
         NumberFormat dollar = NumberFormat.getCurrencyInstance();
         String text;
 
@@ -150,8 +143,8 @@ public class Main {
         return text;
     }
 
-    // Used to convert the transaction code into text for interpretation
     public static String convertText(int transactionCode) {
+        // Used to convert the transaction code into text for interpretation
         switch (transactionCode) {
             case 1: return "Check";
             case 2: return "Deposit";
@@ -161,7 +154,8 @@ public class Main {
     }
 
     @SuppressWarnings("unchecked")
-    public static boolean openFile() {
+    public static void openFile() {
+        // Let's user select an existing file with account data stored in a vector
         boolean fileOpened;
 
         // Create File Chooser and set initial settings
@@ -181,7 +175,6 @@ public class Main {
                 new FileInputStream(selectedFile))
             ) {
                 dataStore = (Vector<Account>)ois.readObject();
-                // On default, load first element, TODO: Change later
                 account = dataStore.elementAt(0);
                 saved = true;
                 // If successful set and return the status of the function
@@ -196,11 +189,13 @@ public class Main {
             fileOpened = false;
         }
         
-        return fileOpened;
+        if (!fileOpened) {
+            dialogInfo("File not opened.");
+        } 
     }
 
     public static boolean saveFile() {
-        // Prompt user how to save
+        // Prompt user how they would like to save their file
         int save = JOptionPane.showConfirmDialog(
             null, 
             "Would you like to use the current default file:\n./acct.dat", 
@@ -265,6 +260,10 @@ public class Main {
     }
     
     private static void saveOnClose() {
+        // Custom windowlister when application is closed
+        // prompts user to save their data if not saved
+        // beforehand
+
         if (!saved) {
             // Prompt user to save changes
             int option = JOptionPane.showConfirmDialog(
@@ -291,7 +290,7 @@ public class Main {
                 frame.dispose();
                 System.exit(0);
             }
-        // No changes detected, exit directly
+        // No changes detected from last save, exit directly
         } else {
             frame.dispose();
             System.exit(0);
@@ -299,9 +298,12 @@ public class Main {
     }
 
     public static void promptToSave() {
+        // When change detected to datastore, reset saved boolean
+        // to prompt users 
         saved = false;
     }
 
+    /* SET OF JOPTIONPANE'S FOR STANDARD DIALOG BOXES USED THROUGH PROGRAM */
     public static String dialogQuestion(String message) {
         return JOptionPane.showInputDialog(
             null,

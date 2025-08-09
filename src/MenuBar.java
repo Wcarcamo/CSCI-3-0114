@@ -1,17 +1,9 @@
 package src;
 
-import javax.swing.BoxLayout;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-
+import javax.swing.*;
 import java.awt.event.*;
 
-public class MenuBar extends JMenuBar{
+public class MenuBar extends JMenuBar {
     private JMenu menuFile, menuAccounts, menuTransactions;
     private JMenuItem openFile, saveFile, addNewAccount, listTransactions, listChecks;
     private JMenuItem listDeposits, listServiceCharges, findAccount, listAccounts;
@@ -115,8 +107,11 @@ public class MenuBar extends JMenuBar{
         // Hide main menu GUI
         Main.frame.setVisible(false);
 
+        // Do not let users enter transactions without first loading an
+        // account
         if (Main.account == null) {
             Main.dialogInfo("You must select an account first.");
+            Main.frame.setVisible(true);
             return;
         }
 
@@ -126,21 +121,22 @@ public class MenuBar extends JMenuBar{
             String transaction = Main.dialogQuestion("Enter your transaction code: ");
 
             // Check users transaction code
-            switch (transaction) {
-                // NULL check needed if user cancels first input dialog box 
-                case null: break;
-                case "0": 
+            // NULL check needed if user canfcels first input dialog box 
+            if (transaction != null) {
+                if (transaction.equals("0")) {
                     Main.dialogInfo(Main.account.checking.toString());
-                    break;
                 // Call helper functions for checks and deposits
-                case "1": newCheck(); break;
-                case "2": newDeposit(); break;
+                } else if (transaction.equals("1")) {
+                    newCheck();
+                } else if (transaction.equals("2")) {
+                    newDeposit();
                 // Provide a default message to user if transaction code entered
                 // is invalid
-                default:
+                } else {
                     Main.dialogError("Invalid Code: Enter 0, 1, or 2.");
-                    break;
+                }
             }
+
             // Prompt user if they need to enter another transaction, regardless
             //  if previous transaction was acceptable or if there was an issue
             again = Main.dialogConfirm("Enter Another Transaction?");
@@ -233,7 +229,7 @@ public class MenuBar extends JMenuBar{
                 Main.isNotValid(cash.getText()) ||
                 Main.isNotValid(checks.getText())
             ) {
-                Main.dialogError("Either Cash or Checks was invalid");
+                Main.dialogError("Cash or Checks was invalid.");
             // If no issues detected with either cash or check input, continue
             // depositing transaction
             } else {
@@ -373,16 +369,23 @@ public class MenuBar extends JMenuBar{
     }
 
     public void findAccount() {
+        // Searches through datastore to find an account by it's given name
+        // if found, load the account, if not let user know account wasn't found
+
+        // Get account search input
         String search = Main.dialogQuestion("Enter the account name:");
         boolean found = false;
 
+        // Loop through datastore to find acount
         for (Account accountElement : Main.dataStore) {
             if (search.equals(accountElement.getName())) {
                 found = true;
+                // If found, load account for review or entering new transactions
                 Main.account = accountElement;
             }
         }
 
+        // Let user know if account found
         if (found) {
             Main.ta.setText("Found account for " + search);
         } else {

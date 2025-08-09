@@ -2,8 +2,8 @@ package src;
 import java.io.Serializable;
 public class Account implements Serializable {
     /* MEMBERS */
-    protected String name; // The person who owns the account
-    protected double balance;// do not define this in CheckingAccount class
+    protected String name; 
+    protected double balance; 
     protected CheckingAccount checking;
     
     /* CONSTRUCTOR */
